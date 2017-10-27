@@ -49,43 +49,16 @@ def maybe_download_and_extract(hypes):
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
 
-    data_road_zip = os.path.join(data_dir, 'data_road.zip')
+    data_chole_zip = os.path.join(data_dir, 'data_chole.zip')
     vgg_weights = os.path.join(data_dir, 'vgg16.npy')
-    kitti_road_dir = os.path.join(data_dir, 'data_road/')
+    chole_dir = os.path.join(data_dir, 'data_chole/')
 
-    if os.path.exists(vgg_weights) and os.path.exists(kitti_road_dir):
+    if os.path.exists(vgg_weights) and os.path.exists(chole_dir):
         return
 
     import tensorvision.utils as utils
     import zipfile
     from shutil import copy2
-
-    # Download KITTI DATA
-    kitti_data_url = hypes['data']['kitti_url']
-
-    if kitti_data_url == '':
-        logging.error("Data URL for Kitti Data not provided.")
-        url = "http://www.cvlibs.net/download.php?file=data_road.zip"
-        logging.error("Please visit: {}".format(url))
-        logging.error("and request Kitti Download link.")
-        logging.error("Enter URL in hypes/kittiSeg.json")
-        exit(1)
-    if not kitti_data_url[-19:] == 'kitti/data_road.zip':
-        logging.error("Wrong url.")
-        url = "http://www.cvlibs.net/download.php?file=data_road.zip"
-        logging.error("Please visit: {}".format(url))
-        logging.error("and request Kitti Download link.")
-        logging.error("Enter URL in hypes/kittiSeg.json")
-        exit(1)
-
-    logging.info("Downloading Kitti Road Data.")
-    utils.download(kitti_data_url, data_dir)
-    # Extract and prepare KITTI DATA
-    logging.info("Extracting kitti_road data.")
-    zipfile.ZipFile(data_road_zip, 'r').extractall(data_dir)
-    kitti_road_dir = os.path.join(data_dir, 'data_road/')
-
-    logging.info("Preparing kitti_road data.")
 
     train_txt = "data/train3.txt"
     val_txt = "data/val3.txt"
@@ -147,22 +120,83 @@ def _make_data_gen(hypes, phase, data_dir):
 
     data_file = os.path.join(data_dir, data_file)
 
-    road_color = np.array(hypes['data']['road_color'])
+    grasper_color = np.array(hypes['data']['grasper_color'])
+    bipolar_color = np.array(hypes['data']['biploar_color'])
+    hook_color = np.array(hypes['data']['hook_color'])
+    scissors_color = np.array(hypes['data']['scissors_color'])
+    clipper_color = np.array(hypes['data']['clipper_color'])
+    irrigator_color = np.array(hypes['data']['irrigator_color'])
+    specimenbag_color = np.array(hypes['data']['specimenbag_color'])
+    liver_color = np.array(hypes['data']['liver_color'])
+    gallbladder_color = np.array(hypes['data']['gallbladder_color'])
+    fat_color = np.array(hypes['data']['fat_color'])
     background_color = np.array(hypes['data']['background_color'])
+    artery_color = np.array(hypes['data']['artery_color'])
+    black_color = np.array(hypes['data']['black_color'])
+    scoop_color = np.array(hypes['data']['scoop_color'])
+    intestine_color = np.array(hypes['data']['intestine_color'])
+    trocar_color = np.array(hypes['data']['trocar_color'])
+    clip_color = np.array(hypes['data']['clip_color'])
+    blood_color = np.array(hypes['data']['blood_color'])
+    bile_color = np.array(hypes['data']['bile_color'])
 
     data = _load_gt_file(hypes, data_file)
 
     for image, gt_image in data:
 
-        gt_bg = np.all(gt_image == background_color, axis=2)
-        gt_road = np.all(gt_image == road_color, axis=2)
+        gt_grasper = np.all(gt_image == grasper_color, axis=2)
+        gt_bipolar = np.all(gt_image == bipolar_color, axis=2)
+        gt_hook = np.all(gt_image == hook_color, axis=2)
+        gt_scissors = np.all(gt_image == scissors_color, axis=2)
+        gt_clipper = np.all(gt_image == clipper_color, axis=2)
+        gt_irrigator = np.all(gt_image == irrigator_color, axis=2)
+        gt_specimenbag = np.all(gt_image == specimenbag_color, axis=2)
+        gt_liver = np.all(gt_image == liver_color, axis=2)
+        gt_gallbladder = np.all(gt_image == gallbladder_color, axis=2)
+        gt_fat = np.all(gt_image == fat_color, axis=2)
+        gt_background = np.all(gt_image == background_color, axis=2)
+        gt_artery = np.all(gt_image == artery_color, axis=2)
+        gt_black = np.all(gt_image == black_color, axis=2)
+        gt_scoop = np.all(gt_image == scoop_color, axis=2)
+        gt_intestine = np.all(gt_image == intestine_color, axis=2)
+        gt_trocar = np.all(gt_image == trocar_color, axis=2)
+        gt_clip = np.all(gt_image == clip_color, axis=2)
+        gt_blood = np.all(gt_image == blood_color, axis=2)
+        gt_bile = np.all(gt_image == bile_color, axis=2)
 
-        assert(gt_road.shape == gt_bg.shape)
-        shape = gt_bg.shape
-        gt_bg = gt_bg.reshape(shape[0], shape[1], 1)
-        gt_road = gt_road.reshape(shape[0], shape[1], 1)
+        assert(gt_grasper.shape == gt_biploar.shape == gt_hook.shape == \
+            gt_scissors.shape == gt_clipper.shape == gt_irrigator.shape == \
+            gt_specimenbag.shape == gt_liver.shape == gt_gallbladder.shape == \
+            gt_fat.shape == gt_background.shape == gt_artery.shape == \
+            gt_black.shape == gt_scoop.shape == gt_intestine.shape == \
+            gt_trocar.shape == gt_clip.shape == gt_blood.shape == \
+            gt_bile.shape)
+        shape = gt_grasper.shape
+        gt_grasper = gt_grasper.reshape(shape[0], shape[1], 1)
+        gt_bipolar = gt_bipolar.reshape(shape[0], shape[1], 1)
+        gt_hook = gt_hook.reshape(shape[0], shape[1], 1)
+        gt_scissors = gt_scissors.reshape(shape[0], shape[1], 1)
+        gt_clipper = gt_clipper.reshape(shape[0], shape[1], 1)
+        gt_irrigator = gt_irrigator.reshape(shape[0], shape[1], 1)
+        gt_specimenbag = gt_specimenbag.reshape(shape[0], shape[1], 1)
+        gt_liver = gt_liver.reshape(shape[0], shape[1], 1)
+        gt_gallbladder = gt_gallbladder.reshape(shape[0], shape[1], 1)
+        gt_fat = gt_fat.reshape(shape[0], shape[1], 1)
+        gt_background = gt_background.reshape(shape[0], shape[1], 1)
+        gt_artery = gt_artery.reshape(shape[0], shape[1], 1)
+        gt_black = gt_black.reshape(shape[0], shape[1], 1)
+        gt_scoop = gt_scoop.reshape(shape[0], shape[1], 1)
+        gt_intestine = gt_intestine.reshape(shape[0], shape[1], 1)
+        gt_trocar = gt_trocar.reshape(shape[0], shape[1], 1)
+        gt_clip = gt_clip.reshape(shape[0], shape[1], 1)
+        gt_blood = gt_blood.reshape(shape[0], shape[1], 1)
+        gt_bile = gt_bile.reshape(shape[0], shape[1], 1)
 
-        gt_image = np.concatenate((gt_bg, gt_road), axis=2)
+        gt_image = np.concatenate((gt_grasper, gt_biploar, gt_hook, \
+            gt_scissors, gt_clipper, gt_irrigator, gt_specimenbag, gt_liver, \
+            gt_gallbladder, gt_fat, gt_background, gt_artery, gt_black, \
+            gt_scoop, gt_intestine, gt_trocar, gt_clip, gt_blood, gt_bile),
+            axis=2)
 
         if phase == 'val':
             yield image, gt_image
@@ -489,7 +523,7 @@ def inputs(hypes, q, phase):
 
 def main():
     """main."""
-    with open('../hypes/kitti_seg.json', 'r') as f:
+    with open('../hypes/CholeSeg_VGG.json', 'r') as f:
         hypes = json.load(f)
 
     q = {}
