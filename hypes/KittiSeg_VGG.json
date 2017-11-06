@@ -6,7 +6,7 @@
     "optimizer_file" : "../optimizer/generic_optimizer.py",
     "evaluator_file" : "../evals/kitti_eval.py"
   },
-  
+
   "path": ["../incl"],
 
   "data": {
@@ -17,7 +17,7 @@
     "vgg_url": "https://dl.dropboxusercontent.com/u/50333326/vgg16.npy",
     "kitti_url": ""
   },
- 
+
   "arch": {
     "fcn_in": "pool5",
     "num_classes" : 2,

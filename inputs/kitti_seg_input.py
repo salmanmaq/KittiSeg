@@ -39,6 +39,39 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.INFO,
                     stream=sys.stdout)
 
+def resize_gt_image(gt_image, image_height, image_width):
+    """Resizes the Ground Truth Label tensor by dividing the tensor in
+    3 dimensional slices and resizing them one at a time. Concatenates all
+    the individual slices at the end.
+
+    """
+
+    shape = gt_image.shape
+    num_dims = shape[2]
+    num_normal_dims = num_dims - num_dims%3
+
+    sliced = np.zeros([shape[0], shape[1], 3])
+    resized_gt = np.zeros([image_height, image_width, 3])
+    for i in range(0, num_dims - 1, 3):
+        sliced = gt_image[:,:,i:i+3]
+        resized_slice = scipy.misc.imresize(sliced,
+        size=(image_height, image_width), interp='nearest')
+        resized_gt = np.concatenate((resized_gt, resized_slice), axis=2)
+
+    resized_gt = resized_gt[:,:,0:num_normal_dims]
+
+    if num_dims % 3 != 0:
+        last_slice = gt_image[:,:,num_normal_dims-1:-1]
+        temp_array_shape = num_slices + (num_dims%3)%3
+        temp_zeros = np.zeros([shape[0], shape[1], temp_array_shape])
+        temp_slice = np.concatenate((last_slice, temp_zeros), axis=2)
+        resized_last_slice = scipy.misc.imresize(temp_slice,
+        size=(image_height, image_width), interp='nearest')
+
+    gt_image = np.concatenate((resized_gt, resized_last_slice), axis=2)
+    gt_image = gt_image[:,:, 0:-1] / 255
+
+    return  gt_image
 
 def maybe_download_and_extract(hypes):
     """ Downloads, extracts and prepairs data.
@@ -60,10 +93,10 @@ def maybe_download_and_extract(hypes):
     import zipfile
     from shutil import copy2
 
-    train_txt = "data/train3.txt"
-    val_txt = "data/val3.txt"
-    copy2(train_txt, kitti_road_dir)
-    copy2(val_txt, kitti_road_dir)
+    train_txt = "DATA/data_chole/train3.txt"
+    val_txt = "DATA/data_chole/val3.txt"
+    copy2(train_txt, chole_dir)
+    copy2(val_txt, chole_dir)
 
     vgg_url = kitti_data_url = hypes['data']['vgg_url']
     # Download VGG DATA
@@ -121,7 +154,7 @@ def _make_data_gen(hypes, phase, data_dir):
     data_file = os.path.join(data_dir, data_file)
 
     grasper_color = np.array(hypes['data']['grasper_color'])
-    bipolar_color = np.array(hypes['data']['biploar_color'])
+    bipolar_color = np.array(hypes['data']['bipolar_color'])
     hook_color = np.array(hypes['data']['hook_color'])
     scissors_color = np.array(hypes['data']['scissors_color'])
     clipper_color = np.array(hypes['data']['clipper_color'])
@@ -164,7 +197,7 @@ def _make_data_gen(hypes, phase, data_dir):
         gt_blood = np.all(gt_image == blood_color, axis=2)
         gt_bile = np.all(gt_image == bile_color, axis=2)
 
-        assert(gt_grasper.shape == gt_biploar.shape == gt_hook.shape == \
+        assert(gt_grasper.shape == gt_bipolar.shape == gt_hook.shape == \
             gt_scissors.shape == gt_clipper.shape == gt_irrigator.shape == \
             gt_specimenbag.shape == gt_liver.shape == gt_gallbladder.shape == \
             gt_fat.shape == gt_background.shape == gt_artery.shape == \
@@ -192,7 +225,7 @@ def _make_data_gen(hypes, phase, data_dir):
         gt_blood = gt_blood.reshape(shape[0], shape[1], 1)
         gt_bile = gt_bile.reshape(shape[0], shape[1], 1)
 
-        gt_image = np.concatenate((gt_grasper, gt_biploar, gt_hook, \
+        gt_image = np.concatenate((gt_grasper, gt_bipolar, gt_hook, \
             gt_scissors, gt_clipper, gt_irrigator, gt_specimenbag, gt_liver, \
             gt_gallbladder, gt_fat, gt_background, gt_artery, gt_black, \
             gt_scoop, gt_intestine, gt_trocar, gt_clip, gt_blood, gt_bile),
@@ -297,12 +330,8 @@ def resize_label_image_with_pad(image, label, image_height, image_width):
 def resize_label_image(image, gt_image, image_height, image_width):
     image = scipy.misc.imresize(image, size=(image_height, image_width),
                                 interp='cubic')
-    shape = gt_image.shape
-    gt_zero = np.zeros([shape[0], shape[1], 1])
-    gt_image = np.concatenate((gt_image, gt_zero), axis=2)
-    gt_image = scipy.misc.imresize(gt_image, size=(image_height, image_width),
-                                   interp='nearest')
-    gt_image = gt_image[:, :, 0:2]/255
+
+    gt_image = resize_gt_image(gt_image)
 
     return image, gt_image
 
@@ -551,10 +580,10 @@ def main():
             image = image_batch.eval()
             gt = label_batch.eval()
             scp.misc.imshow(image[0])
-            gt_bg = gt[0, :, :, 0]
-            gt_road = gt[0, :, :, 1]
-            scp.misc.imshow(gt_bg)
-            scp.misc.imshow(gt_road)
+            #gt_bg = gt[0, :, :, 0]
+            #gt_road = gt[0, :, :, 1]
+            #scp.misc.imshow(gt_bg)
+            #scp.misc.imshow(gt_road)
 
         coord.request_stop()
         coord.join(threads)
